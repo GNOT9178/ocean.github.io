@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>把博客推上线：GitHub Pages 从空仓库到可访问 · Ocean</title>
+<meta name="description" content="GitHub Pages 完整部署记录：仓库命名与访问路径、相对路径陷阱、.nojekyll、自定义域名与 Cloudflare、HTTPS 与排错表。">
+<meta name="author" content="Ocean">
+<meta name="theme-color" content="#0a6f74">
+<meta property="og:type" content="article">
+<meta property="og:title" content="把博客推上线：GitHub Pages 从空仓库到可访问">
+<meta property="og:description" content="我的仓库一开始只有一个 .gitignore。这篇记录从目录结构、Pages 开关、相对路径的坑，到 Cloudflare 自定义域名和 HTTPS 的完整过程。">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('ocean-theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到正文</a>
+<div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html" aria-label="Ocean 首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M2 9c2.5-3 5-3 7.5 0S14.5 12 17 9s5-3 5 0"/>
+          <path d="M2 16c2.5-3 5-3 7.5 0S14.5 19 17 16s5-3 5 0"/>
+        </svg>
+      </span>
+      <span class="brand-text">Ocean<span class="brand-dot">.</span></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav" aria-label="展开导航">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M4 7h16M4 12h16M4 17h16"/>
+      </svg>
+    </button>
+    <nav class="nav" id="siteNav" aria-label="主导航">
+      <a href="../index.html">首页</a>
+      <a href="security-roadmap.html">学习路线</a>
+      <a href="../index.html#posts">文章</a>
+      <a href="../about.html">关于</a>
+    </nav>
+    <button class="theme-btn" id="themeToggle" type="button" aria-label="切换深色模式">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+      </svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+    <div class="article-shell">
+      <article>
+        <header class="article-head">
+          <p class="kicker">建站部署</p>
+          <h1 class="article-title">把博客推上线：GitHub Pages 从空仓库到可访问</h1>
+          <p class="article-deck">我的仓库一开始只有一个 <code>.gitignore</code>。这篇记录从目录结构、Pages 开关、相对路径的坑，到 Cloudflare 自定义域名和 HTTPS 的完整过程。</p>
+          <div class="article-meta">
+            <span class="author"><span class="avatar">O</span>Ocean</span>
+            <span class="sep" aria-hidden="true">·</span>
+            <time datetime="2026-11-09">2026-11-09</time>
+            <span class="sep" aria-hidden="true">·</span>
+            <span>约 9 分钟</span>
+          </div>
+        </header>
+
+        <div class="prose">
+          <p>
+            建站这件事，难的不是写页面，而是<strong>把页面变成能打开的网址</strong>。我卡了最久的地方也不是 CSS，而是「为什么推送之后访问是 404」。
+            这篇把整个过程按顺序记下来，包括那几个我现在想起来还挺蠢的坑。
+          </p>
+
+          <h2 id="url">一、先搞清楚你会拿到哪个网址</h2>
+          <p>GitHub Pages 有两种站点，<strong>仓库名决定你是哪一种</strong>，这一点必须先分清：</p>
+          <table>
+            <thead>
+              <tr><th>类型</th><th>仓库名必须是</th><th>访问地址</th><th>路径前缀</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>用户站点（根站点）</td>
+                <td><code>&lt;用户名&gt;.github.io</code></td>
+                <td><code>https://用户名.github.io/</code></td>
+                <td>无</td>
+              </tr>
+              <tr>
+                <td>项目站点</td>
+                <td>任意其他名字</td>
+                <td><code>https://用户名.github.io/仓库名/</code></td>
+                <td>有，且不能省略</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            我踩的第一个坑就在这里。仓库叫 <code>ocean.github.io</code>，看起来很像用户站点，但我的用户名是 <code>GNOT9178</code>，
+            两者对不上，所以它其实是<strong>项目站点</strong>，真正的地址是：
+          </p>
+          <pre><span class="lang">text</span><code>https://gnot9178.github.io/ocean.github.io/</code></pre>
+          <p>
+            这个结论看起来只是个「地址不一样」，实际上决定了后面所有链接的写法——这也是第四节那个坑的根源。
+          </p>
+
+          <h2 id="structure">二、最小的可运行结构</h2>
+          <p>Pages 只认一件事：<strong>仓库根目录（或指定目录）里有没有 <code>index.html</code></strong>。有，就渲染；没有，就是 404。</p>
+          <pre><span class="lang">text</span><code>ocean.github.io/
+├── index.html          ← 必须有，首页
+├── 404.html            ← 可选，自定义错误页
+├── about.html
+├── .nojekyll           ← 可选，见第三节
+├── posts/
+│   └── hello-ocean.html
+└── assets/
+    ├── css/style.css
+    ├── js/main.js
+    └── img/favicon.svg</code></pre>
+          <p>不需要 <code>package.json</code>，不需要构建命令，也不需要服务器。静态文件放上去就能跑，这是 Pages 最舒服的地方。</p>
+
+          <h2 id="enable">三、打开 Pages 开关</h2>
+          <ol>
+            <li>仓库页面 → <strong>Settings</strong>（顶部导航最后一个）；</li>
+            <li>左侧边栏 → <strong>Pages</strong>；</li>
+            <li><strong>Source</strong> 选 <code>Deploy from a branch</code>；</li>
+            <li><strong>Branch</strong> 选 <code>main</code>，目录选 <code>/ (root)</code>，点 <strong>Save</strong>；</li>
+            <li>等 1–3 分钟，刷新页面，顶部会出现「Your site is live at ...」和访问按钮。</li>
+          </ol>
+          <p>
+            构建进度可以在仓库的 <strong>Actions</strong> 标签或右侧 <strong>Deployments</strong> 里看。
+            如果部署记录显示成功但访问还是 404，先确认文件名大小写——GitHub 的服务器是 Linux，<code>Index.html</code> 不等于 <code>index.html</code>。
+          </p>
+          <div class="callout">
+            <p class="callout-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.4"/>
+              </svg>
+              免费账户的两个限制
+            </p>
+            <p>仓库必须是 <strong>Public</strong>；站点也是<strong>全网公开</strong>的。所以不要把密钥、内网地址、客户资料、扫描结果放进这个仓库——对你的专业方向来说，这条尤其重要。</p>
+          </div>
+
+          <h2 id="nojekyll">四、为什么放一个 <code>.nojekyll</code></h2>
+          <p>
+            默认情况下，Pages 会先跑一遍 <strong>Jekyll</strong>（Ruby 的静态站点生成器）再发布。它会忽略以下划线开头的文件和目录，
+            还可能改写一些内容。我们不使用 Jekyll，最简单的做法就是在仓库根目录放一个<strong>空文件</strong>，名字叫 <code>.nojekyll</code>，
+            告诉它「原样发布，别处理」。
+          </p>
+          <pre><span class="lang">bash</span><code><span class="c"># 在仓库根目录创建空文件</span>
+<span class="p">$</span> touch .nojekyll
+
+<span class="c"># Windows PowerShell 写法</span>
+<span class="p">PS&gt;</span> New-Item -ItemType File -Name .nojekyll</code></pre>
+          <p>文件名前面有个点，资源管理器里可能看不见，用 <code>git status</code> 确认它真的被加进去了。</p>
+
+          <h2 id="paths">五、路径陷阱：绝对路径会 404（重点）</h2>
+          <p>
+            这一节是我花时间最多的地方。项目站点的根目录不是域名根，而是 <code>/ocean.github.io/</code>。所以——
+          </p>
+          <pre><span class="lang">html</span><code><span class="c">&lt;!-- ❌ 错：会去请求域名根，实际地址不存在 --&gt;</span>
+&lt;link rel="stylesheet" href="/assets/css/style.css"&gt;
+
+<span class="c">&lt;!-- ✅ 对：相对当前文件的位置 --&gt;</span>
+&lt;link rel="stylesheet" href="assets/css/style.css"&gt;
+&lt;link rel="stylesheet" href="../assets/css/style.css"&gt;  <span class="c">&lt;!-- 子目录里的页面 --&gt;</span></code></pre>
+          <p>
+            表现是：HTML 能打开，但<strong>样式全丢、图片全裂、导航点不动</strong>——因为那些资源都请求到了 <code>https://gnot9178.github.io/assets/...</code>，而那里什么都没有。
+          </p>
+          <p>
+            两种修法，我选了第一种：
+          </p>
+          <ul>
+            <li><strong>全部用相对路径</strong>：首页写 <code>assets/...</code>，<code>posts/</code> 里的页面写 <code>../assets/...</code>。缺点是要心里有数，同一个链接在不同层级写法不同。</li>
+            <li><strong>用 <code>&lt;base&gt;</code> 标签</strong>：在 <code>&lt;head&gt;</code> 里加 <code>&lt;base href="/ocean.github.io/"&gt;</code>，之后所有相对链接都从这个前缀算。缺点是把目录结构写死在了页面里，本地双击预览会失效。</li>
+          </ul>
+          <p>
+            相对的，如果哪天我把仓库改名成 <code>GNOT9178.github.io</code>（和用户名一致），它就会变成根站点，<code>/assets/</code> 这种写法反而才是对的。
+            <strong>换仓库名之前，先把链接检查一遍。</strong>
+          </p>
+
+          <h2 id="push">六、推代码的两种方式</h2>
+          <h3>方式 A：本地 git（推荐，能写提交信息）</h3>
+          <pre><span class="lang">bash</span><code><span class="p">$</span> git add .
+<span class="p">$</span> git commit -m <span class="s">"add: 首页与第一篇文章"</span>
+<span class="p">$</span> git push origin main</code></pre>
+          <p>推送后等一两分钟，Pages 会自动重新构建。可以到 Actions 里看这次构建用了多久。</p>
+
+          <h3>方式 B：网页上传（不想装 git 时够用）</h3>
+          <ol>
+            <li>仓库首页 → <strong>Add file</strong> → <strong>Upload files</strong>；</li>
+            <li>把整个文件夹拖进去，<strong>注意保持目录结构</strong>；</li>
+            <li>填提交信息，点 <strong>Commit changes</strong>。</li>
+          </ol>
+          <p>这种方式改单篇文章很快，但一次只能传一批，多了容易漏文件。</p>
+
+          <h2 id="domain">七、自定义域名与 Cloudflare</h2>
+          <p>有域名的话，Pages 也支持绑定，免费版同样能开 HTTPS。</p>
+
+          <h3>7.1 在 GitHub 这边配</h3>
+          <ol>
+            <li>Settings → Pages → <strong>Custom domain</strong>，填入域名，比如 <code>blog.example.com</code>；</li>
+            <li>Save 之后，仓库根目录会自动生成一个 <code>CNAME</code> 文件，内容就是这一行域名——<strong>别删它</strong>；</li>
+            <li>等 DNS 检查通过（通常几分钟到几小时），勾上 <strong>Enforce HTTPS</strong>。</li>
+          </ol>
+
+          <h3>7.2 在域名解析那边配</h3>
+          <table>
+            <thead>
+              <tr><th>你想用的域名</th><th>记录类型</th><th>值</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>blog.example.com</code>（子域名，推荐）</td><td>CNAME</td><td><code>gnot9178.github.io</code></td></tr>
+              <tr><td><code>example.com</code>（根域名）</td><td>A / AAAA</td><td>APEX 记录需指向 GitHub 提供的 IP，见官方文档</td></tr>
+            </tbody>
+          </table>
+          <p>子域名用 CNAME 最省事，根域名麻烦一些，新手建议先用 <code>blog.</code> 这种子域名跑通。</p>
+
+          <h3>7.3 Cloudflare 的两个坑</h3>
+          <p>域名的 NS 托管在 Cloudflare 时，最容易出问题的是下面两点：</p>
+          <ul>
+            <li>
+              <strong>橙色云朵（代理开启）会挡住 GitHub 的域名验证。</strong>
+              GitHub 需要通过 DNS 验证域名归属、并签发证书，走代理时它看到的是 Cloudflare 的 IP。
+              第一次配置建议先把云朵点成<strong>灰色（DNS only）</strong>，等 Pages 里显示证书已签发、<code>Enforce HTTPS</code> 可以勾选了，再决定要不要开代理。
+            </li>
+            <li>
+              <strong>SSL/TLS 模式不要用 Flexible。</strong>Flexible 意味着「Cloudflare 到源站走 HTTP」，而 Pages 会强制跳 HTTPS，
+              两边互相跳转就成了<strong>重定向死循环</strong>（浏览器提示重定向次数过多）。用 <code>Full</code> 或 <code>Full (strict)</code>。
+            </li>
+          </ul>
+          <p>如果访问出现 522 / 526，基本就是「代理开着 + 源站配置不匹配」，先关代理排除掉这一层，再回头调。</p>
+
+          <h2 id="https-404">八、强制 HTTPS 与 404 页面</h2>
+          <p>
+            <strong>Enforce HTTPS</strong> 打开后，所有 <code>http://</code> 访问都会 301 到 <code>https://</code>。
+            证书没签发好之前这个选项是灰的，耐心等就行，不用反复点。
+          </p>
+          <p>
+            仓库根目录放一个 <code>404.html</code>，Pages 就会用它渲染找不到的路径——对项目站点同样有效，作用范围是<strong>整个域名</strong>。
+            我把它做成了一句话加两个按钮，至少不会让人直接看到 GitHub 的默认提示。
+          </p>
+
+          <h2 id="trouble">九、排错表</h2>
+          <table>
+            <thead>
+              <tr><th>现象</th><th>最常见原因</th><th>怎么查</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>访问全部 404</td><td>没有 <code>index.html</code>，或文件名大小写不对</td><td>看仓库根目录文件名；Linux 区分大小写</td></tr>
+              <tr><td>页面能打开但没样式</td><td>绝对路径写成了 <code>/assets/...</code></td><td>按 F12 看 Network 里 404 的请求地址</td></tr>
+              <tr><td>推送了但页面没变</td><td>构建还没跑完，或浏览器缓存</td><td>看 Actions 最新记录；<kbd>Ctrl</kbd> + <kbd>F5</kbd> 强制刷新</td></tr>
+              <tr><td>中文全是乱码</td><td>文件不是 UTF-8 编码</td><td><code>&lt;meta charset="utf-8"&gt;</code>，编辑器另存为 UTF-8</td></tr>
+              <tr><td>自定义域名一直 Unverified</td><td>DNS 没生效，或开了 Cloudflare 代理</td><td><code>nslookup 你的域名</code>；先关代理</td></tr>
+              <tr><td>重定向次数过多</td><td>Cloudflare SSL 模式是 Flexible</td><td>改成 Full (strict)</td></tr>
+              <tr><td>改了仓库名后全挂</td><td>站点路径前缀变了</td><td>全局搜索 <code>href="/</code> 和 <code>src="/</code></td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="local">十、本地预览</h2>
+          <p>写完想马上看效果，不用等推送。任意目录下起一个静态服务器：</p>
+          <pre><span class="lang">bash</span><code><span class="p">$</span> python -m http.server 8000
+<span class="c"># 然后浏览器访问 http://localhost:8000/</span></code></pre>
+          <p>
+            一定要用 <code>http://</code> 而不是双击文件。直接打开 <code>file://</code> 时，相对路径、字体、Cookie 的行为都和线上不同，
+            出现「本地好好的、上线就坏」多半是这个原因。
+          </p>
+
+          <h2 id="security">十一、给网安方向的两条提醒</h2>
+          <div class="callout warn">
+            <p class="callout-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3l9 16H3z"/><path d="M12 9v5M12 16.5v.4"/>
+              </svg>
+              公开仓库 = 公开一切提交历史
+            </p>
+            <p>
+              删除文件只是「再提交一次删除」，旧内容仍然留在 <code>git log</code> 里，任何人都能翻出来。
+              所以密钥、密码、内网 IP、真实目标的扫描结果，<strong>一次都不要提交</strong>。真要放配置，用环境变量或本地文件加 <code>.gitignore</code>。
+            </p>
+            <p>
+              还有一条：你在博客里写的靶场 IP、内部笔记，都可能被搜索引擎收录。发布前花十秒问自己一句——这段内容被未来的面试官看到，是加分还是减分。
+            </p>
+          </div>
+
+          <p>
+            整套流程走完，剩下的就只是「写」了。真正难的部分从现在开始。
+          </p>
+        </div>
+
+        <footer class="article-footer">
+          <div class="tag-row">
+            <span class="tag">建站部署</span>
+            <span class="tag">GitHub Pages</span>
+            <span class="tag">Cloudflare</span>
+          </div>
+          <p class="share-note">
+            本文由 Ocean 写于 2026 年 11 月。GitHub Pages 的界面和限制可能随版本变化，以官方文档为准。
+          </p>
+
+          <nav class="post-nav" aria-label="文章导航">
+            <a href="hello-ocean.html">
+              <span class="dir">上一篇</span>
+              <span class="ttl">你好，Ocean：一个网络安全新手的第 0 篇</span>
+            </a>
+            <a class="next" href="security-roadmap.html">
+              <span class="dir">下一篇</span>
+              <span class="ttl">网安新手路线图：我给自己排的 12 个月</span>
+            </a>
+          </nav>
+        </footer>
+      </article>
+
+      <aside class="toc" aria-label="本文目录">
+        <p class="toc-title">本文目录</p>
+        <ol>
+          <li><a href="#url">一、你会拿到哪个网址</a></li>
+          <li><a href="#structure">二、最小可运行结构</a></li>
+          <li><a href="#enable">三、打开 Pages 开关</a></li>
+          <li><a href="#nojekyll">四、.nojekyll 的作用</a></li>
+          <li><a href="#paths">五、路径陷阱</a></li>
+          <li><a href="#push">六、推代码的两种方式</a></li>
+          <li><a href="#domain">七、自定义域名与 Cloudflare</a></li>
+          <li><a href="#https-404">八、HTTPS 与 404</a></li>
+          <li><a href="#trouble">九、排错表</a></li>
+          <li><a href="#local">十、本地预览</a></li>
+          <li><a href="#security">十一、两条提醒</a></li>
+        </ol>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M2 9c2.5-3 5-3 7.5 0S14.5 12 17 9s5-3 5 0"/>
+              <path d="M2 16c2.5-3 5-3 7.5 0S14.5 19 17 16s5-3 5 0"/>
+            </svg>
+          </span>
+          <span class="brand-text">Ocean<span class="brand-dot">.</span></span>
+        </a>
+        <p>一个网络安全初学者的长期笔记本。所有测试均在本人搭建或明确授权的靶场环境中进行，内容仅用于学习与防御研究。</p>
+      </div>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="../index.html">首页</a>
+        <a href="security-roadmap.html">学习路线</a>
+        <a href="../about.html">关于</a>
+        <a href="https://github.com/GNOT9178/ocean.github.io" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year">2025</span> Ocean · 用纯 HTML/CSS 手写，托管于 GitHub Pages</span>
+      <span>最后更新：2026-11-11</span>
+    </div>
+  </div>
+</footer>
+
+<button class="back-top" id="backTop" type="button" aria-label="回到顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 19V5M6 11l6-6 6 6"/>
+  </svg>
+</button>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

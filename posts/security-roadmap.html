@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>网安新手路线图：我给自己排的 12 个月 · Ocean</title>
+<meta name="description" content="网络安全入门路线：地基、Web 基础、漏洞体系、内网实战四个阶段该学什么、练什么、怎么验收，附每周时间表和五个新手误区。">
+<meta name="author" content="Ocean">
+<meta name="theme-color" content="#0a6f74">
+<meta property="og:type" content="article">
+<meta property="og:title" content="网安新手路线图：我给自己排的 12 个月">
+<meta property="og:description" content="从「什么都不会」到「能独立挖一个洞并写报告」，中间需要补哪些课、打多少靶、怎么才算过关。">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('ocean-theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到正文</a>
+<div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html" aria-label="Ocean 首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M2 9c2.5-3 5-3 7.5 0S14.5 12 17 9s5-3 5 0"/>
+          <path d="M2 16c2.5-3 5-3 7.5 0S14.5 19 17 16s5-3 5 0"/>
+        </svg>
+      </span>
+      <span class="brand-text">Ocean<span class="brand-dot">.</span></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav" aria-label="展开导航">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M4 7h16M4 12h16M4 17h16"/>
+      </svg>
+    </button>
+    <nav class="nav" id="siteNav" aria-label="主导航">
+      <a href="../index.html">首页</a>
+      <a href="security-roadmap.html" class="is-current">学习路线</a>
+      <a href="../index.html#posts">文章</a>
+      <a href="../about.html">关于</a>
+    </nav>
+    <button class="theme-btn" id="themeToggle" type="button" aria-label="切换深色模式">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+      </svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+    <div class="article-shell">
+      <article>
+        <header class="article-head">
+          <p class="kicker">学习路线</p>
+          <h1 class="article-title">网安新手路线图：我给自己排的 12 个月</h1>
+          <p class="article-deck">从「什么都不会」到「能独立挖一个洞并写出报告」，中间需要补哪些课、打多少靶、怎么才算过关。</p>
+          <div class="article-meta">
+            <span class="author"><span class="avatar">O</span>Ocean</span>
+            <span class="sep" aria-hidden="true">·</span>
+            <time datetime="2026-11-10">2026-11-10</time>
+            <span class="sep" aria-hidden="true">·</span>
+            <span>约 12 分钟</span>
+          </div>
+        </header>
+
+        <div class="prose">
+          <p>
+            网上关于「怎么学网安」的建议，问题不在少，而在<strong>太多而且互相矛盾</strong>：一会儿说要先学汇编，一会儿说直接上靶场，
+            一会儿又推荐从运维转过来。我花了很久才想明白：这些建议本身都没错，错的是它们对应的是不同的起点和不同的目标。
+          </p>
+          <p>
+            所以这篇文章不谈「最优路径」，只写<strong>我给自己排的路径</strong>：明确起点（零基础、有一点编程）、明确目标（做 Web 安全，能独立完成一次授权测试并写报告）、
+            明确时间（每周约 12 小时）。你可以直接拿走框架，再按自己的情况改。
+          </p>
+
+          <h2 id="direction">零、先选方向，别急着学工具</h2>
+          <p>网络安全不是一个专业，是十几个专业的合集。入门阶段最容易犯的错，是把某个方向的工具当成整个行业的知识。</p>
+          <table>
+            <thead>
+              <tr><th>方向</th><th>主要做什么</th><th>需要的底子</th><th>我的选择</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Web 安全 / 渗透测试</td>
+                <td>在授权范围内测网站和业务系统，找漏洞、写报告</td>
+                <td>网络 + Web + Linux + 一门脚本语言</td>
+                <td><strong>主攻</strong></td>
+              </tr>
+              <tr>
+                <td>二进制 / 逆向</td>
+                <td>分析恶意样本、挖内存漏洞（Pwn）</td>
+                <td>C、汇编、操作系统、编译原理</td>
+                <td>以后再看</td>
+              </tr>
+              <tr>
+                <td>安全运营 / 应急</td>
+                <td>看告警、做研判、溯源、处置</td>
+                <td>系统 + 日志 + 网络流量分析</td>
+                <td>作为副线了解</td>
+              </tr>
+              <tr>
+                <td>合规 / 等保</td>
+                <td>按标准做差距分析、出整改方案</td>
+                <td>标准文档 + 沟通 + 业务理解</td>
+                <td>暂时不碰</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            我选 Web 的理由很朴素：<strong>反馈最快</strong>。改一行参数就能看到页面变化，不需要等几个月才能跑通第一个 demo；而且入门资源最丰富，卡住了基本都能搜到解释。
+          </p>
+
+          <h2 id="stage1">一、阶段 1（第 1–2 月）：把地基打平</h2>
+          <p>这一阶段不碰任何「黑客工具」。三件事：网络、Linux、编程。</p>
+
+          <h3>1.1 网络</h3>
+          <ul>
+            <li>TCP/IP 分层，以及数据从浏览器到服务器的完整路径；</li>
+            <li>TCP 三次握手、四次挥手，为什么是三次不是两次；</li>
+            <li>HTTP/1.1 报文结构：请求行、请求头、空行、请求体；状态码分类；</li>
+            <li>DNS 解析流程（递归 / 迭代），<code>A</code>、<code>CNAME</code>、<code>MX</code>、<code>TXT</code> 记录的区别；</li>
+            <li>代理和 VPN 的区别（这个直接决定后面怎么配抓包）。</li>
+          </ul>
+          <p>
+            练习方式：装个 Wireshark，抓一次自己访问网站的全过程，然后<strong>对着抓到的包，把上面每一条讲出来</strong>。
+            讲不出来就是没学会。
+          </p>
+
+          <h3>1.2 Linux</h3>
+          <ul>
+            <li>目录结构：<code>/etc</code>、<code>/var/log</code>、<code>/proc</code> 各自放什么；</li>
+            <li>权限：rwx、<code>umask</code>、SUID/SGID，<code>chmod</code> 的八进制写法；</li>
+            <li>进程与信号：<code>ps</code>、<code>top</code>、<code>kill</code>、<code>nohup</code>；</li>
+            <li>日志在哪、怎么看；服务怎么起、怎么查为什么起不来；</li>
+            <li>三剑客 <code>grep</code>、<code>sed</code>、<code>awk</code> 的基本用法。</li>
+          </ul>
+          <p>最有效的练法：<strong>用命令行搭一套 Web 环境</strong>，而不是用集成面板。装 nginx、PHP、MySQL，把 DVWA 跑起来。</p>
+          <pre><span class="lang">bash</span><code><span class="c"># 用 Docker 最快跑起一套 DVWA（只在本机 127.0.0.1 暴露）</span>
+docker run -d --name dvwa -p <span class="n">127.0.0.1</span>:<span class="n">8080</span>:<span class="n">80</span> vulnerables/web-dvwa
+
+<span class="c"># 看日志，确认服务真的起来了</span>
+docker logs -f dvwa</code></pre>
+
+          <h3>1.3 编程</h3>
+          <p>只需要两件事：<strong>Python 能写小脚本</strong>、<strong>能看懂别人的 JS 和 PHP</strong>。</p>
+          <ul>
+            <li>Python：文件读写、<code>requests</code>、<code>socket</code>、正则、异常处理；</li>
+            <li>JS：事件、DOM、<code>fetch</code>、同源策略；</li>
+            <li>PHP：至少能看懂 <code>$_GET</code>、<code>$_POST</code>、字符串拼接和 <code>include</code>；</li>
+            <li>SQL：<code>SELECT</code>、<code>UNION</code>、子查询、<code>information_schema</code> 是什么。</li>
+          </ul>
+
+          <div class="callout tip">
+            <p class="callout-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M5 12.5l4.5 4.5L19 7"/>
+              </svg>
+              阶段验收
+            </p>
+            <ul class="checklist">
+              <li>不看笔记，说出一次 HTTP 请求里每个头的作用；</li>
+              <li>能在 Linux 上从零装好并启动 DVWA，知道日志在哪；</li>
+              <li>能用 Python 写一个 30 行的本机端口探测脚本（只扫 127.0.0.1）。</li>
+            </ul>
+          </div>
+
+          <h2 id="stage2">二、阶段 2（第 3–4 月）：Web 是怎么运转的</h2>
+          <p>漏洞是「程序按照你输入的方式运行」的结果。所以必须先知道正常流程长什么样。</p>
+          <ul>
+            <li><strong>前后端交互</strong>：表单提交、AJAX、JSON API、重定向；一次点击到底发了几个请求；</li>
+            <li><strong>身份体系</strong>：Cookie、Session、Token 的区别，为什么「登录状态」其实是一张凭证；</li>
+            <li><strong>同源策略与 CORS</strong>：浏览器的安全边界在哪里，为什么 XSS 可怕；</li>
+            <li><strong>参数来源</strong>：GET、POST、JSON、Header、Cookie、文件——每一个都是输入点；</li>
+            <li><strong>工具</strong>：浏览器开发者工具、Burp Suite 的 Proxy / Repeater / Intruder、<code>curl</code>。</li>
+          </ul>
+          <p>
+            这一阶段我最深的体会：<strong>先把 Burp 用熟，再学漏洞</strong>。因为后面所有验证，本质上都是「拦截 → 改一个地方 → 放行 → 看反应」，
+            这条动作不熟练，学什么漏洞都是照着别人的步骤点。
+          </p>
+
+          <h2 id="stage3">三、阶段 3（第 5–8 月）：一类一类啃漏洞</h2>
+          <p>不追着「今天挖到什么洞」跑，而是按类型吃透。每一类都回答四个问题：<strong>为什么成立 / 怎么验证 / 影响多大 / 怎么修</strong>。</p>
+          <table>
+            <thead>
+              <tr><th>漏洞</th><th>一句话原理</th><th>练法</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>SQL 注入</td><td>用户输入进入了 SQL 语句的语法位置</td><td>sqli-labs 前 30 关 + PortSwigger Labs</td></tr>
+              <tr><td>XSS</td><td>输入被当成 HTML/JS 执行，没有按文本处理</td><td>反射型 → 存储型 → DOM 型，逐个来</td></tr>
+              <tr><td>CSRF</td><td>浏览器会自动带上凭据，而服务端只看凭据</td><td>自己写一个恶意页面打自己的靶场</td></tr>
+              <tr><td>文件上传</td><td>只校验了前端、后缀或 Content-Type</td><td>DVWA Upload 三档难度全过一遍</td></tr>
+              <tr><td>文件包含</td><td>路径参数可控，<code>include</code> 了不该包含的文件</td><td>本地包含 + 伪协议，理解原理即可</td></tr>
+              <tr><td>SSRF</td><td>服务端替你去请求了内网地址</td><td>PortSwigger SSRF Labs</td></tr>
+              <tr><td>越权 / IDOR</td><td>只验证了「登录了」，没验证「是不是你的」</td><td>改 ID、改角色参数</td></tr>
+              <tr><td>命令 / 代码执行</td><td>输入拼接进了系统命令或 <code>eval</code></td><td>靶场 + 审计一小段源码</td></tr>
+              <tr><td>逻辑漏洞</td><td>流程设计有缺口（改价、重复领券、短信轰炸）</td><td>自己设计业务流程找缺口</td></tr>
+              <tr><td>反序列化</td><td>不可信数据被还原成对象，触发魔术方法</td><td>先理解原理，动手放到后面</td></tr>
+            </tbody>
+          </table>
+          <p>
+            练的顺序建议按「<strong>回显明显 → 无回显 → 需要链条</strong>」推进：先做能看到报错和结果的，再做盲注、盲打，最后才是需要组合多个点的。
+            中间会有一段非常难受的时期：每关都卡、每关都要查。这是正常的，别在这个阶段换方向。
+          </p>
+
+          <h2 id="stage4">四、阶段 4（第 9–12 月）：内网与实战</h2>
+          <ul>
+            <li><strong>域基础</strong>：AD、域控、Kerberos 认证流程、LDAP、SMB——至少知道它们各自解决什么问题；</li>
+            <li><strong>横向移动</strong>：凭据抓取、票据、端口转发与隧道，理解「一层一层往里走」的思路；</li>
+            <li><strong>权限提升</strong>：Windows 与 Linux 的常见提权面（服务、计划任务、SUID、内核）；</li>
+            <li><strong>报告写作</strong>：执行摘要、风险定级、复现步骤、修复建议——这部分被新手严重低估；</li>
+            <li><strong>靶场</strong>：TryHackMe 的路径课、HackTheBox 的 Starting Point，按机器做完整流程。</li>
+          </ul>
+
+          <h2 id="schedule">五、每周时间怎么排</h2>
+          <table>
+            <thead>
+              <tr><th>时间</th><th>内容</th><th>产出</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>工作日 1.5 小时</td><td>30 分钟看理论 + 60 分钟动手</td><td>当天的命令或实验记录</td></tr>
+              <tr><td>周六 4 小时</td><td>打靶场，一次只做一台/一类</td><td>复现步骤 + 截图</td></tr>
+              <tr><td>周日 2 小时</td><td>写复盘，更新笔记</td><td>一篇笔记或一段总结</td></tr>
+              <tr><td>每月最后一周</td><td>只复习、只整理，不学新东西</td><td>把散笔记合并成一篇</td></tr>
+            </tbody>
+          </table>
+          <p>
+            每周约 11–12 小时。听起来不多，但坚持一年就是 500 多小时——比「周末突击两个月然后放弃」有效得多。
+          </p>
+
+          <h2 id="pitfalls">六、五个最容易踩的坑</h2>
+
+          <h3>1. 只学工具，不学原理</h3>
+          <p>
+            会用扫描器不等于会渗透。工具只是把已知的验证过程自动化了，你仍然要知道它在验证什么。
+            判断标准很简单：<strong>把工具关掉，你还能不能手工把这个洞测出来？</strong>
+          </p>
+
+          <h3>2. 跳过 HTTP 直接学漏洞</h3>
+          <p>
+            这是最致命的。所有 Web 漏洞都发生在请求和响应之间，不懂报文，就只能在别人写好的 payload 里复制粘贴，
+            环境一变就完全不会。
+          </p>
+
+          <h3>3. 靶场一路点 next</h3>
+          <p>
+            打完一关却没看过源码、没想过「如果这行代码换个写法还成不成立」，等于做了个填空题。
+            我的做法是：<strong>每关打完，去靶场源码里找到对应的那一行，在笔记里贴出来。</strong>
+          </p>
+
+          <h3>4. 收集课程，而不是学完课程</h3>
+          <p>存了 40G 视频的人，往往一集都没看完。宁可只跟一套教材，把它做完。</p>
+
+          <h3>5. 不写报告</h3>
+          <p>
+            真实的授权测试里，客户看到的只有报告。你发现的漏洞再有价值，写不清楚影响范围、复现步骤和修复建议，就等于没发现。
+            从打第一个靶场开始，就按正式报告的结构写。
+          </p>
+
+          <h2 id="resources">七、我实际在用的资源</h2>
+          <table>
+            <thead>
+              <tr><th>用途</th><th>资源</th><th>说明</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Web 基础</td><td>MDN Web Docs</td><td>查 HTTP、Cookie、同源策略最准</td></tr>
+              <tr><td>漏洞练习</td><td>PortSwigger Web Security Academy</td><td>免费，讲解 + 在线靶场，质量最高</td></tr>
+              <tr><td>体系框架</td><td>OWASP Top 10 / WSTG</td><td>知道行业怎么看漏洞分类和测试项</td></tr>
+              <tr><td>本地靶场</td><td>DVWA、sqli-labs、VulnHub</td><td>离线可跑，改源码方便</td></tr>
+              <tr><td>综合靶场</td><td>TryHackMe、HackTheBox</td><td>THM 适合入门，HTB 更硬核</td></tr>
+              <tr><td>查漏补缺</td><td>官方文档（nginx / PHP / MySQL）</td><td>比二手教程可靠，习惯查文档是长期收益</td></tr>
+            </tbody>
+          </table>
+
+          <h2 id="check">八、怎么判断自己真的学会了</h2>
+          <p>不用等课程学完，用这四条检验：</p>
+          <ul class="checklist">
+            <li>能对着一个陌生页面，列出它的输入点，并说清每个点可能通向什么漏洞；</li>
+            <li>能不看教程，在靶场里独立复现至少 10 类漏洞；</li>
+            <li>能读懂一段有缺陷的代码，指出问题行并给出修复写法；</li>
+            <li>能写出一份包含执行摘要、复现步骤、修复建议的报告。</li>
+          </ul>
+
+          <div class="callout warn">
+            <p class="callout-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3l9 16H3z"/><path d="M12 9v5M12 16.5v.4"/>
+              </svg>
+              边界提醒
+            </p>
+            <p>
+              上面所有练习都应在<strong>自建环境或明确授权的靶场平台</strong>中进行。技术本身是双刃的：同样的手法，用在授权测试里是工作，
+              用在别人的系统上就是违法。学之前先把边界想清楚。
+            </p>
+          </div>
+
+          <p>这份计划我会按季度回来改一次，改了什么会写进博客。如果你也在按类似的节奏走，欢迎来 Issues 交流。</p>
+        </div>
+
+        <footer class="article-footer">
+          <div class="tag-row">
+            <span class="tag">学习路线</span>
+            <span class="tag">网络安全</span>
+            <span class="tag">方法论</span>
+          </div>
+          <p class="share-note">
+            本文由 Ocean 写于 2026 年 11 月。路线图是个人的，不是标准答案，欢迎在
+            <a href="https://github.com/GNOT9178/ocean.github.io/issues" rel="noopener">GitHub Issues</a> 补充你踩过的坑。
+          </p>
+
+          <nav class="post-nav" aria-label="文章导航">
+            <a href="github-pages-deploy.html">
+              <span class="dir">上一篇</span>
+              <span class="ttl">把博客推上线：GitHub Pages 从空仓库到可访问</span>
+            </a>
+            <a class="next" href="web-login-lab.html">
+              <span class="dir">下一篇</span>
+              <span class="ttl">从登录框开始：SQL 注入的第一课（授权靶场）</span>
+            </a>
+          </nav>
+        </footer>
+      </article>
+
+      <aside class="toc" aria-label="本文目录">
+        <p class="toc-title">本文目录</p>
+        <ol>
+          <li><a href="#direction">零、先选方向</a></li>
+          <li><a href="#stage1">一、阶段 1：地基</a></li>
+          <li><a href="#stage2">二、阶段 2：Web 基础</a></li>
+          <li><a href="#stage3">三、阶段 3：漏洞体系</a></li>
+          <li><a href="#stage4">四、阶段 4：内网实战</a></li>
+          <li><a href="#schedule">五、每周时间安排</a></li>
+          <li><a href="#pitfalls">六、五个坑</a></li>
+          <li><a href="#resources">七、资源清单</a></li>
+          <li><a href="#check">八、验收标准</a></li>
+        </ol>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M2 9c2.5-3 5-3 7.5 0S14.5 12 17 9s5-3 5 0"/>
+              <path d="M2 16c2.5-3 5-3 7.5 0S14.5 19 17 16s5-3 5 0"/>
+            </svg>
+          </span>
+          <span class="brand-text">Ocean<span class="brand-dot">.</span></span>
+        </a>
+        <p>一个网络安全初学者的长期笔记本。所有测试均在本人搭建或明确授权的靶场环境中进行，内容仅用于学习与防御研究。</p>
+      </div>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="../index.html">首页</a>
+        <a href="security-roadmap.html">学习路线</a>
+        <a href="../about.html">关于</a>
+        <a href="https://github.com/GNOT9178/ocean.github.io" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year">2025</span> Ocean · 用纯 HTML/CSS 手写，托管于 GitHub Pages</span>
+      <span>最后更新：2026-11-11</span>
+    </div>
+  </div>
+</footer>
+
+<button class="back-top" id="backTop" type="button" aria-label="回到顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 19V5M6 11l6-6 6 6"/>
+  </svg>
+</button>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>你好，Ocean：一个网络安全新手的第 0 篇 · Ocean</title>
+<meta name="description" content="为什么在收藏夹已经爆满的情况下还要再开一个博客：一个网络安全初学者写下的开站理由、三条自我约定和免责声明。">
+<meta name="author" content="Ocean">
+<meta name="theme-color" content="#0a6f74">
+<meta property="og:type" content="article">
+<meta property="og:title" content="你好，Ocean：一个网络安全新手的第 0 篇">
+<meta property="og:description" content="收藏夹里躺着两百个「以后再看」，真正学进去的不到十分之一。所以我决定换个方式：写下来。">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('ocean-theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到正文</a>
+<div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html" aria-label="Ocean 首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M2 9c2.5-3 5-3 7.5 0S14.5 12 17 9s5-3 5 0"/>
+          <path d="M2 16c2.5-3 5-3 7.5 0S14.5 19 17 16s5-3 5 0"/>
+        </svg>
+      </span>
+      <span class="brand-text">Ocean<span class="brand-dot">.</span></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav" aria-label="展开导航">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M4 7h16M4 12h16M4 17h16"/>
+      </svg>
+    </button>
+    <nav class="nav" id="siteNav" aria-label="主导航">
+      <a href="../index.html">首页</a>
+      <a href="security-roadmap.html">学习路线</a>
+      <a href="../index.html#posts">文章</a>
+      <a href="../about.html">关于</a>
+    </nav>
+    <button class="theme-btn" id="themeToggle" type="button" aria-label="切换深色模式">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+      </svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+    <div class="article-shell">
+      <article>
+        <header class="article-head">
+          <p class="kicker">随笔 · 第 0 篇</p>
+          <h1 class="article-title">你好，Ocean：一个网络安全新手的第 0 篇</h1>
+          <p class="article-deck">收藏夹里躺着两百多个「以后再看」，真正学进去的不到十分之一。所以我决定换个方式：写下来。</p>
+          <div class="article-meta">
+            <span class="author"><span class="avatar">O</span>Ocean</span>
+            <span class="sep" aria-hidden="true">·</span>
+            <time datetime="2026-11-08">2026-11-08</time>
+            <span class="sep" aria-hidden="true">·</span>
+            <span>约 5 分钟</span>
+          </div>
+        </header>
+
+        <div class="prose">
+          <p>
+            这是这个站的第一篇文章，按理说应该写得正式一点、宏大一点，比如「致三年后的自己」。
+            但我更想把它写成一份<strong>说明书</strong>：说明我现在是什么水平、打算怎么学、以及这个博客的边界在哪里。
+          </p>
+
+          <h2 id="level">一、先说说我现在是什么水平</h2>
+          <p>诚实一点：<strong>初学者</strong>。具体到这个程度——</p>
+          <ul>
+            <li>能看懂一条 HTTP 请求长什么样，但打开抓包工具，几十个字段还是会看花眼；</li>
+            <li>会在 Linux 里用 <code>cd</code>、<code>ls</code>、<code>chmod</code>、<code>ps</code>、<code>grep</code>，碰到 <code>systemd</code> 和网络配置就得查文档；</li>
+            <li>写过一点 Python，<code>requests</code> 和 <code>socket</code> 的 demo 能跑通，但写不出像样的工具；</li>
+            <li>知道 SQL 注入、XSS 的名字和大概原理，DVWA 的低难度能过去，中难度开始卡壳。</li>
+          </ul>
+          <p>
+            之所以要把这些摊开写，是因为我看过太多「零基础到精通」的博客：开篇就是一览众山小，读完只让人觉得「我很菜」。
+            而我更想留下的是一个<strong>正在发生的过程</strong>——包括卡住的那些天。
+          </p>
+
+          <h2 id="why">二、为什么还要再开一个博客</h2>
+          <p>三个理由，按重要性排序。</p>
+
+          <h3>1. 输出会暴露我没懂的地方</h3>
+          <p>
+            看视频的时候，大脑很容易产生一种「我已经会了」的错觉。可一旦要写清楚「为什么这个参数要这么传」，
+            就会卡在第一句话。写作是最便宜的自我检测：能写明白，才算真的懂；写不明白，正好知道自己该回去补哪一块。
+          </p>
+
+          <h3>2. 收藏夹不等于能力</h3>
+          <p>
+            「先收藏，以后再学」是一种极其舒服的拖延。存下来的那一刻，大脑已经提前享受了「学会」的愉悦感，
+            于是真正去学的动力反而被消耗掉了。我现在的做法是：<strong>收藏必须配一条笔记</strong>，
+            写不了笔记的链接直接删掉。
+          </p>
+
+          <h3>3. 给未来的自己留证据</h3>
+          <p>
+            一年之后回来看，我能清楚知道哪些东西当时卡了三天、后来是怎么想通的。这比任何学习计划表都真实，
+            也比任何「年度总结」都有用。
+          </p>
+
+          <h2 id="what">三、这个站会写什么</h2>
+          <p>目前规划了四类内容，都会尽量按同一个格式写：</p>
+          <table>
+            <thead>
+              <tr><th>类型</th><th>写什么</th><th>写法</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>基础笔记</td>
+                <td>HTTP、TCP、Linux、Python</td>
+                <td>用「我原本以为……其实是……」的格式，先写误解再写正解</td>
+              </tr>
+              <tr>
+                <td>靶场复现</td>
+                <td>DVWA、sqli-labs、PortSwigger Lab</td>
+                <td>环境 → 现象 → 原理 → 验证 → 修复，五步走完</td>
+              </tr>
+              <tr>
+                <td>工具配置</td>
+                <td>Burp、nmap、虚拟机与代理</td>
+                <td>可复制的命令、配置文件片段、踩坑记录</td>
+              </tr>
+              <tr>
+                <td>复盘</td>
+                <td>失败的尝试、走错的方向</td>
+                <td>不美化，写清楚时间都花在哪了</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>
+            其中<strong>复盘</strong>这一类我写得最认真。成功的路径往往有运气成分，失败的记录才最能复用。
+          </p>
+
+          <h2 id="wont">四、这个站不会写什么</h2>
+          <ul>
+            <li><strong>不写「一键拿站」式的教程</strong>：没有上下文、没有前提条件、没有修复建议的攻击步骤，对学习毫无帮助，对别人只有风险。</li>
+            <li><strong>不写未经授权的目标</strong>：任何真实站点、真实系统，只要没有书面授权，就不出现在这里。</li>
+            <li><strong>不转述付费课程</strong>：我买的课自己看，这里只写我自己的理解和实验。</li>
+            <li><strong>不追新闻热点</strong>：漏洞爆出来的时候，网上信息已经够多了，我写得不会更快也不会更准。</li>
+          </ul>
+
+          <h2 id="promise">五、三条自我约定</h2>
+          <ol>
+            <li>只写<strong>自己真的动手做过</strong>的内容；引用别人的结论时注明出处。</li>
+            <li>只测试<strong>自己搭建或明确授权</strong>的环境：自建虚拟机、公开靶场、CTF 题目，仅此三种。</li>
+            <li>每月至少一篇。写不出技术文章就写复盘，不凑数量，不写水文。</li>
+          </ol>
+
+          <h2 id="disclaimer">六、一个必须写清楚的免责声明</h2>
+          <div class="callout warn">
+            <p class="callout-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3l9 16H3z"/><path d="M12 9v5M12 16.5v.4"/>
+              </svg>
+              重要
+            </p>
+            <p>
+              本站所有涉及漏洞验证的内容，<strong>仅限在本人搭建的靶场或获得明确授权的测试环境中进行</strong>。
+              未经授权对他人系统进行扫描、探测、入侵，在中国境内可能违反《网络安全法》《数据安全法》《刑法》第二百八十五条、第二百八十六条等规定，
+              在其他国家和地区同样属于违法行为。
+            </p>
+            <p>
+              如果你在学习过程中发现了真实系统的漏洞，正确做法是通过厂商的 SRC 或公开的漏洞报告渠道提交，而不是自己「试试看」。
+            </p>
+          </div>
+
+          <h2 id="next">七、下一篇</h2>
+          <p>
+            已经写好在旁边的两篇：一篇是给自己排的
+            <a href="security-roadmap.html">12 个月学习路线</a>，一篇是
+            <a href="github-pages-deploy.html">这个站是怎么部署上线的</a>。
+            如果你也刚开始，希望它们能帮你省下一点摸索的时间。
+          </p>
+          <p>那就从今天开始记吧。</p>
+        </div>
+
+        <footer class="article-footer">
+          <div class="tag-row">
+            <span class="tag">随笔</span>
+            <span class="tag">学习方法</span>
+            <span class="tag">建站</span>
+          </div>
+          <p class="share-note">
+            本文由 Ocean 写于 2026 年 11 月。文中观点来自个人学习经验，欢迎在
+            <a href="https://github.com/GNOT9178/ocean.github.io/issues" rel="noopener">GitHub Issues</a> 指正。
+          </p>
+
+          <nav class="post-nav" aria-label="文章导航">
+            <a href="../index.html#posts">
+              <span class="dir">返回</span>
+              <span class="ttl">全部文章</span>
+            </a>
+            <a class="next" href="github-pages-deploy.html">
+              <span class="dir">下一篇</span>
+              <span class="ttl">把博客推上线：GitHub Pages 从空仓库到可访问</span>
+            </a>
+          </nav>
+        </footer>
+      </article>
+
+      <aside class="toc" aria-label="本文目录">
+        <p class="toc-title">本文目录</p>
+        <ol>
+          <li><a href="#level">一、现在是什么水平</a></li>
+          <li><a href="#why">二、为什么开博客</a></li>
+          <li><a href="#what">三、会写什么</a></li>
+          <li><a href="#wont">四、不会写什么</a></li>
+          <li><a href="#promise">五、三条自我约定</a></li>
+          <li><a href="#disclaimer">六、免责声明</a></li>
+          <li><a href="#next">七、下一篇</a></li>
+        </ol>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M2 9c2.5-3 5-3 7.5 0S14.5 12 17 9s5-3 5 0"/>
+              <path d="M2 16c2.5-3 5-3 7.5 0S14.5 19 17 16s5-3 5 0"/>
+            </svg>
+          </span>
+          <span class="brand-text">Ocean<span class="brand-dot">.</span></span>
+        </a>
+        <p>一个网络安全初学者的长期笔记本。所有测试均在本人搭建或明确授权的靶场环境中进行，内容仅用于学习与防御研究。</p>
+      </div>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="../index.html">首页</a>
+        <a href="security-roadmap.html">学习路线</a>
+        <a href="../about.html">关于</a>
+        <a href="https://github.com/GNOT9178/ocean.github.io" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year">2025</span> Ocean · 用纯 HTML/CSS 手写，托管于 GitHub Pages</span>
+      <span>最后更新：2026-11-11</span>
+    </div>
+  </div>
+</footer>
+
+<button class="back-top" id="backTop" type="button" aria-label="回到顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 19V5M6 11l6-6 6 6"/>
+  </svg>
+</button>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

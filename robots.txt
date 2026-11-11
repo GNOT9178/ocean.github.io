@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://gnot9178.github.io/ocean.github.io/sitemap.xml

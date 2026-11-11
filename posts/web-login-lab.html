@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>从登录框开始：SQL 注入的第一课（授权靶场） · Ocean</title>
+<meta name="description" content="在自建靶场里理解 SQL 注入：从一个单引号讲起，到注释、布尔判断、联合查询，再回到原理和参数化查询的修复方式。">
+<meta name="author" content="Ocean">
+<meta name="theme-color" content="#0a6f74">
+<meta property="og:type" content="article">
+<meta property="og:title" content="从登录框开始：SQL 注入的第一课（授权靶场）">
+<meta property="og:description" content="为什么一个单引号能让页面报错？从 HTTP 请求到后端拼接，把注入的原理、验证手法和修复方式一次讲清楚。">
+<link rel="icon" href="../assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="../assets/css/style.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('ocean-theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到正文</a>
+<div class="progress" aria-hidden="true"><span id="progressBar"></span></div>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="../index.html" aria-label="Ocean 首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M2 9c2.5-3 5-3 7.5 0S14.5 12 17 9s5-3 5 0"/>
+          <path d="M2 16c2.5-3 5-3 7.5 0S14.5 19 17 16s5-3 5 0"/>
+        </svg>
+      </span>
+      <span class="brand-text">Ocean<span class="brand-dot">.</span></span>
+    </a>
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav" aria-label="展开导航">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M4 7h16M4 12h16M4 17h16"/>
+      </svg>
+    </button>
+    <nav class="nav" id="siteNav" aria-label="主导航">
+      <a href="../index.html">首页</a>
+      <a href="security-roadmap.html">学习路线</a>
+      <a href="../index.html#posts">文章</a>
+      <a href="../about.html">关于</a>
+    </nav>
+    <button class="theme-btn" id="themeToggle" type="button" aria-label="切换深色模式">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+      </svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+  <div class="wrap">
+    <div class="article-shell">
+      <article>
+        <header class="article-head">
+          <p class="kicker">Web 安全 · 靶场笔记</p>
+          <h1 class="article-title">从登录框开始：SQL 注入的第一课（授权靶场）</h1>
+          <p class="article-deck">为什么一个单引号能让页面报错？从 HTTP 请求到后端拼接，把注入的原理、验证手法和修复方式一次讲清楚。</p>
+          <div class="article-meta">
+            <span class="author"><span class="avatar">O</span>Ocean</span>
+            <span class="sep" aria-hidden="true">·</span>
+            <time datetime="2026-11-11">2026-11-11</time>
+            <span class="sep" aria-hidden="true">·</span>
+            <span>约 14 分钟</span>
+          </div>
+        </header>
+
+        <div class="prose">
+          <div class="callout warn">
+            <p class="callout-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 3l9 16H3z"/><path d="M12 9v5M12 16.5v.4"/>
+              </svg>
+              实验环境声明
+            </p>
+            <p>
+              本文所有操作都在<strong>本机 Docker 里的 DVWA / sqli-labs</strong> 完成，访问地址是 <code>127.0.0.1</code>。
+              这些手法只在这类自建或明确授权的环境中使用；对任何未授权的系统使用，都属于违法行为。
+            </p>
+          </div>
+
+          <p>
+            SQL 注入是 Web 安全里最经典的一类漏洞，也是我第一个真正「想明白」的漏洞。
+            想明白的那一刻不是记住了某个 payload，而是意识到一件事：
+            <strong>后端把你的输入，当成了代码的一部分。</strong>
+          </p>
+
+          <h2 id="flow">一、登录框背后发生了什么</h2>
+          <p>在浏览器里填完账号密码点「登录」，实际上发生了三件事。</p>
+
+          <h3>1. 浏览器发了一个 POST 请求</h3>
+          <pre><span class="lang">http</span><code>POST /login.php HTTP/1.1
+Host: 127.0.0.1:8080
+Content-Type: application/x-www-form-urlencoded
+Content-Length: 32
+
+username=admin&amp;password=123456</code></pre>
+
+          <h3>2. 后端把这两个值拼进 SQL</h3>
+          <p>教科书式的脆弱写法长这样（PHP 示例）：</p>
+          <pre><span class="lang">php</span><code>&lt;?php
+<span class="c">// 危险示范：直接把用户输入拼进 SQL 语句</span>
+$user = $_POST['username'];
+$pass = $_POST['password'];
+
+$sql = "SELECT * FROM users WHERE username = '$user' AND password = '$pass'";
+$res = mysqli_query($conn, $sql);
+
+if (mysqli_num_rows($res) &gt; 0) {
+    echo "登录成功";
+}
+?&gt;</code></pre>
+          <p>当输入是 <code>admin</code> / <code>123456</code> 时，拼出来的语句是：</p>
+          <pre><span class="lang">sql</span><code>SELECT * FROM users WHERE username = 'admin' AND password = '123456'</code></pre>
+          <p>到这里一切正常。问题出在：<strong>用户填的内容，和 SQL 的语法，被放进了同一个字符串里。</strong></p>
+
+          <h3>3. 数据库执行这条语句</h3>
+          <p>数据库并不知道哪部分是「程序写的」、哪部分是「用户填的」。它只看到一个完整的 SQL 语句，然后照做。</p>
+
+          <h2 id="quote">二、第一刀：一个单引号</h2>
+          <p>在用户名里只输入一个单引号：</p>
+          <pre><span class="lang">text</span><code>username = '</code></pre>
+          <p>拼出来的语句变成：</p>
+          <pre><span class="lang">sql</span><code>SELECT * FROM users WHERE username = ''' AND password = ''</code></pre>
+          <p>
+            <code>'''</code> 在 SQL 里是语法错误——单引号没闭合。于是页面报错，典型信息是
+            <code>You have an error in your SQL syntax</code>，有的程序甚至会把整条语句回显在页面上。
+          </p>
+          <p>这一步的价值不是「注进去了」，而是<strong>确认了输入确实进了 SQL 的语法位置</strong>。这是后面所有尝试的前提。</p>
+          <div class="callout">
+            <p class="callout-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.4"/>
+              </svg>
+              顺带一个防御点
+            </p>
+            <p>生产环境把数据库错误直接显示给用户，本身就是信息泄露。关掉 <code>display_errors</code>、统一错误页，能让攻击者少拿到很多线索。</p>
+          </div>
+
+          <h2 id="comment">三、为什么注释能救命</h2>
+          <p>
+            既然单引号会破坏语法，那就想办法把后面剩下的部分<strong>注释掉</strong>，让语句重新变成一个合法结构。
+            MySQL 里常用的注释有三种，细节差别值得记住：
+          </p>
+          <table>
+            <thead>
+              <tr><th>注释写法</th><th>要求</th><th>在 URL 里怎么传</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>-- </code>（两个减号 + 空格）</td><td><strong>后面必须有空格</strong>，否则不成立</td><td><code>--+</code>（<code>+</code> 解码为空格）或 <code>--%20</code></td></tr>
+              <tr><td><code>#</code></td><td>直接注释到行尾</td><td><code>%23</code>，<code>#</code> 在 URL 里是锚点，必须编码</td></tr>
+              <tr><td><code>/* */</code></td><td>块注释，可跨行</td><td><code>/**/</code></td></tr>
+            </tbody>
+          </table>
+          <p>经典的第一条 payload 是这么来的：</p>
+          <pre><span class="lang">text</span><code>用户名: admin' -- 
+密码:   随便填</code></pre>
+          <p>拼进 SQL 后：</p>
+          <pre><span class="lang">sql</span><code>SELECT * FROM users WHERE username = 'admin' -- ' AND password = ''</code></pre>
+          <p>
+            <code>--</code> 之后全部被注释掉，条件只剩 <code>username = 'admin'</code>。
+            <strong>密码校验被整段删掉了</strong>——这就是为什么它能绕过登录。
+          </p>
+          <p>
+            注意那个空格：我一开始就卡在这儿，把 <code>--</code> 直接写进输入框，一直不成功，后来才发现 MySQL 的 <code>--</code> 必须跟一个空格或控制字符才算注释。
+          </p>
+
+          <h2 id="boolean">四、布尔判断：让数据库回答「是 / 否」</h2>
+          <p>如果页面不报错、也不回显，那就换思路：<strong>把注入点变成一个可以提问的条件</strong>。</p>
+          <pre><span class="lang">sql</span><code>-- 永远为真：返回所有用户，登录成功
+username = ' OR '1'='1' -- 
+
+-- 永远为假：返回空，登录失败
+username = ' OR '1'='2' -- </code></pre>
+          <p>
+            这两条的结果一个成功一个失败，就说明这个点<strong>可以用来提问</strong>。
+            后面的盲注就是把这个能力用到底：把问题换成「数据库名的第一个字母是不是 a」，
+            根据页面反应的不同逐位猜出内容。慢，但有效。
+          </p>
+
+          <h2 id="union">五、联合查询：把别的表读出来</h2>
+          <p>如果页面会把查询结果回显出来（比如显示「欢迎你，xxx」），就可以用 <code>UNION</code> 把另一条查询的结果拼到同一张结果表里。</p>
+
+          <h3>第一步：确定列数</h3>
+          <pre><span class="lang">sql</span><code>1' ORDER BY 1-- 
+1' ORDER BY 2-- 
+1' ORDER BY 3-- 
+<span class="c">-- 一直加，直到页面报错，说明列数比这个数字少</span></code></pre>
+          <p>假设 <code>ORDER BY 3</code> 报错、<code>ORDER BY 2</code> 正常，说明原查询是 <strong>2 列</strong>。</p>
+
+          <h3>第二步：找到回显位置</h3>
+          <pre><span class="lang">sql</span><code>1' UNION SELECT 1,2-- </code></pre>
+          <p>页面显示 <code>1</code> 和 <code>2</code> 的位置，就是可以「放东西」的位置。把数字换成函数：</p>
+          <pre><span class="lang">sql</span><code>1' UNION SELECT database(), user()-- </code></pre>
+          <p>会回显当前数据库名和数据库用户。接着就能读表名、列名、数据：</p>
+          <pre><span class="lang">sql</span><code><span class="c">-- 列出当前库的所有表</span>
+1' UNION SELECT 1,group_concat(table_name) FROM information_schema.tables WHERE table_schema=database()-- 
+
+<span class="c">-- 假设上一步读到 users 表，列出它的列</span>
+1' UNION SELECT 1,group_concat(column_name) FROM information_schema.columns WHERE table_name='users'-- 
+
+<span class="c">-- 取出账号和密码哈希</span>
+1' UNION SELECT user,password FROM users-- </code></pre>
+          <div class="callout">
+            <p class="callout-label">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.4"/>
+              </svg>
+              两个小细节
+            </p>
+            <p>① <code>UNION</code> 要求两边列数相同，还能靠类型报错判断哪一列是数字、哪一列是字符串。② 有的页面只显示第一行结果，这时用 <code>LIMIT 0,1</code> 或 <code>group_concat()</code> 把多行拼成一行。</p>
+          </div>
+
+          <h2 id="why">六、为什么会这样：拼接与参数化</h3>
+          <p>回到根因。脆弱写法的问题不在于「没有过滤单引号」，而在于<strong>数据被当成了语法</strong>。</p>
+          <p>参数化查询（预处理语句）解决的正是这一点：先把 SQL 的<strong>结构</strong>发给数据库编译好，再把用户数据作为<strong>纯值</strong>填进占位符。数据里就算有单引号、有 <code>UNION</code>，也只会被当作一个普通字符串。</p>
+
+          <h3>PHP（PDO）</h3>
+          <pre><span class="lang">php</span><code><span class="c">// 正确做法一：具名占位符</span>
+$stmt = $pdo-&gt;prepare(
+    'SELECT id, username, password_hash FROM users WHERE username = :name'
+);
+$stmt-&gt;execute([':name' =&gt; $user]);
+
+$row = $stmt-&gt;fetch();
+<span class="c">// 密码不参与 SQL 比较，取出来用 password_verify 校验</span>
+if ($row &amp;&amp; password_verify($pass, $row['password_hash'])) {
+    <span class="c">// 登录成功</span>
+}</code></pre>
+
+          <h3>Python（psycopg2 / sqlite3）</h3>
+          <pre><span class="lang">python</span><code><span class="c"># 正确做法：参数用元组传入，不要自己拼接字符串</span>
+cur.execute(
+    "SELECT id, pwd_hash FROM users WHERE username = %s",
+    (username,)
+)
+row = cur.fetchone()</code></pre>
+
+          <h3>Go（database/sql）</h3>
+          <pre><span class="lang">go</span><code>row := db.QueryRow("SELECT id, pwd_hash FROM users WHERE username = ?", username)</code></pre>
+
+          <h2 id="fix">七、修复清单</h2>
+          <p>只改一行代码是不够的，完整一点应该这样：</p>
+          <ol>
+            <li><strong>参数化查询</strong>：所有带用户输入的地方都用占位符，包括排序字段——如果排序只能选字段名，就用<strong>白名单</strong>映射，不要直接拼。</li>
+            <li><strong>口令哈希存储</strong>：用 <code>password_hash()</code> / <code>bcrypt</code> / <code>argon2</code>，登录时用对应的 <code>verify</code>，不要在 SQL 里比明文。</li>
+            <li><strong>最小权限的数据库账户</strong>：Web 应用用的账号通常只需要 <code>SELECT/INSERT/UPDATE</code> 某几个库，不要用 <code>root</code>，更不要给 <code>FILE</code> 权限。</li>
+            <li><strong>关闭详细报错</strong>：对外统一错误页，详细堆栈只写日志。</li>
+            <li><strong>输入校验是辅助手段</strong>：限制长度、类型能降低风险，但<strong>不能替代参数化</strong>——转义函数在数字型注入面前是无效的。</li>
+            <li><strong>纵深防御</strong>：WAF、RASP、异常查询告警、日志留存。WAF 只能挡住已知特征，绕过手法一直在更新，它永远只是兜底。</li>
+          </ol>
+
+          <h2 id="impact">八、注入到底能造成多大影响</h2>
+          <p>新手容易把注入理解成「绕过登录」，实际上它意味着<strong>数据库里能执行什么，你就能做什么</strong>：</p>
+          <ul>
+            <li>读取业务库里的全量数据（用户表、订单表）；</li>
+            <li>篡改、删除数据，造成业务不可用；</li>
+            <li>在数据库权限允许时<strong>读写服务器文件</strong>；</li>
+            <li>与其他问题组合：拿到密码哈希 → 撞库或离线破解 → 登录后台 → 再找上传点，整条链路就通了；</li>
+            <li>在极端配置下（高权限数据库账户、可写目录），理论上可以进一步影响到<strong>操作系统层</strong>。</li>
+          </ul>
+          <p>
+            这也是为什么在报告里，SQL 注入通常被定为高危：它的<strong>影响面取决于权限，而不是漏洞本身</strong>。
+          </p>
+
+          <h2 id="review">九、我的复盘清单</h2>
+          <p>以后遇到任何输入点，都按这五步走一遍：</p>
+          <ul class="checklist">
+            <li>这个参数最终去哪了？SQL、命令、文件路径、模板、还是 HTTP 请求？</li>
+            <li>它进入的位置是「值」还是「语法」？</li>
+            <li>如果它进了语法，破坏结构会有什么可见反应（报错 / 结果变化 / 时间延迟）？</li>
+            <li>能否用不同类型的问题确认：布尔、联合、时间、报错？</li>
+            <li>修复方案是不是参数化？如果不是，为什么？</li>
+          </ul>
+
+          <p>
+            下一篇打算写 XSS，把「输入被当成代码」这件事换到浏览器里再讲一遍。你会发现这两类漏洞的思维模型，其实是同一个。
+          </p>
+        </div>
+
+        <footer class="article-footer">
+          <div class="tag-row">
+            <span class="tag">Web 安全</span>
+            <span class="tag">SQL 注入</span>
+            <span class="tag">靶场笔记</span>
+          </div>
+          <p class="share-note">
+            本文由 Ocean 写于 2026 年 11 月，实验环境为本地 DVWA。所有内容仅用于授权测试与防御学习，请勿用于未授权目标。
+          </p>
+
+          <nav class="post-nav" aria-label="文章导航">
+            <a href="security-roadmap.html">
+              <span class="dir">上一篇</span>
+              <span class="ttl">网安新手路线图：我给自己排的 12 个月</span>
+            </a>
+            <a class="next" href="../index.html#posts">
+              <span class="dir">返回</span>
+              <span class="ttl">全部文章</span>
+            </a>
+          </nav>
+        </footer>
+      </article>
+
+      <aside class="toc" aria-label="本文目录">
+        <p class="toc-title">本文目录</p>
+        <ol>
+          <li><a href="#flow">一、登录框背后</a></li>
+          <li><a href="#quote">二、第一刀：单引号</a></li>
+          <li><a href="#comment">三、注释的用法</a></li>
+          <li><a href="#boolean">四、布尔判断</a></li>
+          <li><a href="#union">五、联合查询</a></li>
+          <li><a href="#why">六、拼接与参数化</a></li>
+          <li><a href="#fix">七、修复清单</a></li>
+          <li><a href="#impact">八、影响面</a></li>
+          <li><a href="#review">九、复盘清单</a></li>
+        </ol>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="../index.html">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M2 9c2.5-3 5-3 7.5 0S14.5 12 17 9s5-3 5 0"/>
+              <path d="M2 16c2.5-3 5-3 7.5 0S14.5 19 17 16s5-3 5 0"/>
+            </svg>
+          </span>
+          <span class="brand-text">Ocean<span class="brand-dot">.</span></span>
+        </a>
+        <p>一个网络安全初学者的长期笔记本。所有测试均在本人搭建或明确授权的靶场环境中进行，内容仅用于学习与防御研究。</p>
+      </div>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="../index.html">首页</a>
+        <a href="security-roadmap.html">学习路线</a>
+        <a href="../about.html">关于</a>
+        <a href="https://github.com/GNOT9178/ocean.github.io" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year">2025</span> Ocean · 用纯 HTML/CSS 手写，托管于 GitHub Pages</span>
+      <span>最后更新：2026-11-11</span>
+    </div>
+  </div>
+</footer>
+
+<button class="back-top" id="backTop" type="button" aria-label="回到顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 19V5M6 11l6-6 6 6"/>
+  </svg>
+</button>
+
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

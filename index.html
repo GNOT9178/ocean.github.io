@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ocean · 网络安全学习笔记</title>
+<meta name="description" content="Ocean 的网络安全学习笔记：协议基础、Web 漏洞、靶场复现与踩坑记录，一个初学者的长期笔记本。">
+<meta name="author" content="Ocean">
+<meta name="theme-color" content="#0a6f74">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Ocean · 网络安全学习笔记">
+<meta property="og:description" content="一个网络安全初学者的公开笔记本：协议、漏洞、靶场复现与踩坑记录。">
+<meta property="og:locale" content="zh_CN">
+<link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>
+  (function () {
+    try {
+      var t = localStorage.getItem('ocean-theme');
+      if (!t) t = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', t);
+    } catch (e) {}
+  })();
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">跳到正文</a>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a class="brand" href="index.html" aria-label="Ocean 首页">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <path d="M2 9c2.5-3 5-3 7.5 0S14.5 12 17 9s5-3 5 0"/>
+          <path d="M2 16c2.5-3 5-3 7.5 0S14.5 19 17 16s5-3 5 0"/>
+        </svg>
+      </span>
+      <span class="brand-text">Ocean<span class="brand-dot">.</span></span>
+    </a>
+
+    <button class="nav-toggle" id="navToggle" type="button" aria-expanded="false" aria-controls="siteNav" aria-label="展开导航">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <path d="M4 7h16M4 12h16M4 17h16"/>
+      </svg>
+    </button>
+
+    <nav class="nav" id="siteNav" aria-label="主导航">
+      <a href="index.html" class="is-current">首页</a>
+      <a href="posts/security-roadmap.html">学习路线</a>
+      <a href="index.html#posts">文章</a>
+      <a href="about.html">关于</a>
+    </nav>
+
+    <button class="theme-btn" id="themeToggle" type="button" aria-label="切换深色模式">
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>
+      </svg>
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="4.2"/>
+        <path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="wrap hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot" aria-hidden="true"></span>网络安全初学者 · 持续记录中</p>
+        <h1>把网络安全<br>学成自己的<span class="accent">肌肉记忆</span></h1>
+        <p class="hero-sub">
+          这里是 <strong>Ocean</strong> 的公开笔记本。我不写「十分钟精通」，只记录真的动手做过的事：
+          协议怎么跑、漏洞为什么成立、靶场里卡了三天的那一步、以及每一次复盘之后留下的结论。
+        </p>
+        <div class="hero-actions">
+          <a class="btn" href="posts/hello-ocean.html">
+            从第一篇读起
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6"/>
+            </svg>
+          </a>
+          <a class="btn btn-ghost" href="posts/security-roadmap.html">看我的学习路线</a>
+        </div>
+      </div>
+
+      <div class="terminal" aria-hidden="true">
+        <div class="terminal-bar"><i></i><i></i><i></i><span>ocean@blog:~</span></div>
+        <pre class="terminal-body"><span class="t-prompt">ocean@blog</span>:<span class="t-prompt">~</span>$ <span class="t-cmd">whoami</span>
+<span class="t-out">网安初学者 · 白天上课，晚上打靶</span>
+
+<span class="t-prompt">ocean@blog</span>:<span class="t-prompt">~</span>$ <span class="t-cmd">cat focus.txt</span>
+<span class="t-out"><span class="t-key">Web 安全</span> · Linux · 靶场复现</span>
+
+<span class="t-prompt">ocean@blog</span>:<span class="t-prompt">~</span>$ <span class="t-cmd">tail -f notes.log</span>
+<span class="t-out">[11-09] 第一篇笔记已上线</span>
+<span class="t-out">[11-11] 登录框注入实验归档</span>
+<span class="t-prompt">_</span><span class="caret"></span></pre>
+      </div>
+    </div>
+  </section>
+
+  <!-- 文章列表 -->
+  <section class="section" id="posts">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="section-title">
+          最新文章
+          <small>目前 4 篇 · 按时间倒序，新的一直在最上面</small>
+        </h2>
+        <a class="section-link" href="about.html">
+          关于这个站
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h13M13 6l6 6-6 6"/>
+          </svg>
+        </a>
+      </div>
+
+      <div class="post-grid">
+        <a class="post-card" href="posts/web-login-lab.html">
+          <div class="post-meta">
+            <span class="tag">Web 安全</span>
+            <span class="sep" aria-hidden="true"></span>
+            <time datetime="2026-11-11">2026-11-11</time>
+            <span class="sep" aria-hidden="true"></span>
+            <span>约 14 分钟</span>
+          </div>
+          <h3>从登录框开始：SQL 注入的第一课（授权靶场）</h3>
+          <p>为什么一个单引号能让页面报错？从 HTTP 请求到后端拼接，把注入的原理、验证手法和修复方式一次讲清楚，全部在自建靶场里完成。</p>
+          <span class="card-foot">
+            阅读全文
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6"/>
+            </svg>
+          </span>
+        </a>
+
+        <a class="post-card" href="posts/security-roadmap.html">
+          <div class="post-meta">
+            <span class="tag">学习路线</span>
+            <span class="sep" aria-hidden="true"></span>
+            <time datetime="2026-11-10">2026-11-10</time>
+            <span class="sep" aria-hidden="true"></span>
+            <span>约 12 分钟</span>
+          </div>
+          <h3>网安新手路线图：我给自己排的 12 个月</h3>
+          <p>地基、Web 基础、漏洞体系、内网实战，四个阶段各自该学什么、练什么、怎么验收。附每周时间表和五个最容易踩的坑。</p>
+          <span class="card-foot">
+            阅读全文
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6"/>
+            </svg>
+          </span>
+        </a>
+
+        <a class="post-card" href="posts/github-pages-deploy.html">
+          <div class="post-meta">
+            <span class="tag">建站部署</span>
+            <span class="sep" aria-hidden="true"></span>
+            <time datetime="2026-11-09">2026-11-09</time>
+            <span class="sep" aria-hidden="true"></span>
+            <span>约 9 分钟</span>
+          </div>
+          <h3>把博客推上线：GitHub Pages 从空仓库到可访问</h3>
+          <p>我的仓库一开始只有一个 .gitignore。这篇记录从目录结构、Pages 开关、相对路径的坑，到 Cloudflare 自定义域名和 HTTPS 的完整过程。</p>
+          <span class="card-foot">
+            阅读全文
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6"/>
+            </svg>
+          </span>
+        </a>
+
+        <a class="post-card" href="posts/hello-ocean.html">
+          <div class="post-meta">
+            <span class="tag">随笔</span>
+            <span class="sep" aria-hidden="true"></span>
+            <time datetime="2026-11-08">2026-11-08</time>
+            <span class="sep" aria-hidden="true"></span>
+            <span>约 5 分钟</span>
+          </div>
+          <h3>你好，Ocean：一个网络安全新手的第 0 篇</h3>
+          <p>为什么在已经有一堆收藏夹的情况下，还要再开一个博客？这里写下我开站的理由、三条自我约定，以及一个必须说清楚的免责声明。</p>
+          <span class="card-foot">
+            阅读全文
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h13M13 6l6 6-6 6"/>
+            </svg>
+          </span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 正在做的事 -->
+  <section class="section tight">
+    <div class="wrap">
+      <div class="section-head">
+        <h2 class="section-title">
+          正在做的事
+          <small>写下来就会被监督，这是我给自己的一点压力</small>
+        </h2>
+      </div>
+      <div class="focus-strip">
+        <div class="focus-item">
+          <h4>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 3l7.5 4v5c0 4.5-3.2 7.6-7.5 9-4.3-1.4-7.5-4.5-7.5-9V7z"/>
+              <path d="M9.2 12.2l2 2 3.6-3.9"/>
+            </svg>
+            打地基
+          </h4>
+          <p>HTTP 报文、TCP 三次握手、Linux 权限与进程——每天一个知识点，配一条命令动手验证。</p>
+        </div>
+        <div class="focus-item">
+          <h4>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 5h7v6H4zM13 13h7v6h-7z"/>
+              <path d="M11 8h4a2 2 0 0 1 2 2v3"/>
+            </svg>
+            打靶场
+          </h4>
+          <p>DVWA、sqli-labs 和 PortSwigger 的 Lab，一次只吃透一个漏洞，写完复现笔记才算过关。</p>
+        </div>
+        <div class="focus-item">
+          <h4>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4 19V6a2 2 0 0 1 2-2h9l5 5v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2z"/>
+              <path d="M8 12h8M8 16h5"/>
+            </svg>
+            写复盘
+          </h4>
+          <p>每次练习都回答三个问题：它为什么能成？影响有多大？换成我该怎样修？答案直接进博客。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="index.html">
+          <span class="brand-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+              <path d="M2 9c2.5-3 5-3 7.5 0S14.5 12 17 9s5-3 5 0"/>
+              <path d="M2 16c2.5-3 5-3 7.5 0S14.5 19 17 16s5-3 5 0"/>
+            </svg>
+          </span>
+          <span class="brand-text">Ocean<span class="brand-dot">.</span></span>
+        </a>
+        <p>一个网络安全初学者的长期笔记本。所有测试均在本人搭建或明确授权的靶场环境中进行，内容仅用于学习与防御研究。</p>
+      </div>
+      <nav class="footer-links" aria-label="页脚导航">
+        <a href="index.html">首页</a>
+        <a href="posts/security-roadmap.html">学习路线</a>
+        <a href="about.html">关于</a>
+        <a href="https://github.com/GNOT9178/ocean.github.io" rel="noopener">GitHub</a>
+      </nav>
+    </div>
+    <div class="footer-bottom">
+      <span>© <span id="year">2025</span> Ocean · 用纯 HTML/CSS 手写，托管于 GitHub Pages</span>
+      <span>最后更新：2026-11-11</span>
+    </div>
+  </div>
+</footer>
+
+<button class="back-top" id="backTop" type="button" aria-label="回到顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 19V5M6 11l6-6 6 6"/>
+  </svg>
+</button>
+
+<script src="assets/js/main.js"></script>
+</body>
+</html>
